@@ -1,0 +1,17 @@
+# Kafka-related libraries
+confluent-kafka
+
+# Data processing and Delta Lake
+pyspark
+delta-spark
+pandas
+
+# Flask/Dashboard for UI
+flask
+dash
+plotly
+
+# Miscellaneous
+pyyaml
+numpy
+requests
