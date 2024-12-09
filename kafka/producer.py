@@ -17,12 +17,11 @@ def produce_messages(csv_file):
     """Produce messages to Kafka from a CSV file."""
     producer = Producer({"bootstrap.servers": BROKER})
     
-    with open(csv_file, "r") as f:
+    with open(csv_file, "r", encoding="utf-8") as f:  # Added encoding="utf-8"
         reader = csv.DictReader(f)
         for row in reader:
             # Create a dictionary that matches your CSV columns
             message = {
-                "text": row["text"],
                 "rating": row["rating"],
                 "category": row["category"],
                 "product_name": row["product_name"],
@@ -41,5 +40,5 @@ def produce_messages(csv_file):
     print("All messages sent successfully.")
 
 if __name__ == "__main__":
-    csv_path = "../data/raw/product_reviews_dirty.csv"  # Path to your CSV file
+    csv_path = "./data/raw/product_reviews_dirty.csv"  # Path to your CSV file
     produce_messages(csv_path)

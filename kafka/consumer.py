@@ -1,3 +1,4 @@
+from lakehouse import write_to_delta  # Impor fungsi dari lakehouse.py
 from confluent_kafka import Consumer
 import json
 
@@ -32,18 +33,13 @@ def consume_messages():
             record = json.loads(msg.value().decode("utf-8"))
             print(f"Received message: {record}")
             
-            # Example: Save to Delta Lake or process the data
-            save_to_lakehouse(record)
+            # Save data to Delta Lake using the function from lakehouse.py
+            write_to_delta(record)
 
     except KeyboardInterrupt:
         print("Consumer stopped.")
     finally:
         consumer.close()
-
-def save_to_lakehouse(record):
-    """Example function to save data to Delta Lake."""
-    print(f"Saving to lakehouse: {record}")
-    # Here you would write the data to Delta Lake
 
 if __name__ == "__main__":
     consume_messages()

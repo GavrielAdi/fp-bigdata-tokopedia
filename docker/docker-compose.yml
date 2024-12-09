@@ -1,50 +1,43 @@
 services:
   zookeeper:
-    image: confluentinc/cp-zookeeper:latest
+    image: "bitnami/zookeeper:latest"
     container_name: zookeeper
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
     ports:
       - "2181:2181"
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-    networks:
-      - app_network
 
   kafka:
-    image: confluentinc/cp-kafka:latest
+    image: "bitnami/kafka:latest"
     container_name: kafka
+    environment:
+      - KAFKA_BROKER_ID=1
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_LISTENERS=PLAINTEXT://:9092
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092
     ports:
       - "9092:9092"
     depends_on:
       - zookeeper
-    environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL: PLAINTEXT
-      KAFKA_LISTENER_PORT: 9092
-      KAFKA_LISTENER_NAMES: PLAINTEXT
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-    networks:
-      - app_network
 
-  app:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile
-    container_name: app
-    ports:
-      - "5000:5000"
-    depends_on:
-      - kafka
-    volumes:
-      - ../:/app
-    environment:
-      FLASK_APP: ui/app.py
-      FLASK_ENV: development
-    networks:
-      - app_network
+#   app:
+#     build:
+#       context: ..
+#       dockerfile: docker/Dockerfile
+#     container_name: app
+#     ports:
+#       - "5000:5000"
+#     depends_on:
+#       - kafka
+#     volumes:
+#       - ../:/app
+#     environment:
+#       FLASK_APP: ui/app.py
+#       FLASK_ENV: development
+#     networks:
+#       - app_network
 
-networks:
-  app_network:
-    driver: bridge
+# networks:
+#   app_network:
+#     driver: bridge

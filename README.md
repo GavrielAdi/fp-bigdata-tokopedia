@@ -26,3 +26,5 @@ docker-compose up -d
 docker exec -it kafka bash
 kafka-topics.sh --create --topic product_reviews --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
 ```
+
+exec $(dirname $0)/kafka-run-class.sh kafka.admin.TopicCommand "$@"
