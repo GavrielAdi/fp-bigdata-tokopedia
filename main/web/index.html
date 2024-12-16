@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Product Prediction</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; }
+        table { width: 100%; margin-bottom: 1em; border-collapse: collapse; }
+        td, th { padding: 0.5em; border: 1px solid #ccc; }
+        input, select { width: 100%; padding: 0.5em; }
+        button { padding: 0.5em 1em; margin-top: 1em; }
+        #result { margin-top: 1em; font-weight: bold; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>Event Product Prediction</h1>
+    <form id="data-form">
+        <table>
+            <tr>
+                <th>Date</th>
+                <th>Product Category</th>
+                <th>Past Sales</th>
+                <th>Event Type</th>
+            </tr>
+            <tr>
+                <td><input type="date" name="date" required></td>
+                <td>
+                    <select name="category" required>
+                        <option value="electronics">Electronics</option>
+                        <option value="fashion">Fashion</option>
+                        <option value="groceries">Groceries</option>
+                        <option value="home_appliances">Home Appliances</option>
+                    </select>
+                </td>
+                <td><input type="number" step="1" name="sales" required></td>
+                <td>
+                    <select name="event" required>
+                        <option value="holiday">Holiday</option>
+                        <option value="black_friday">Black Friday</option>
+                        <option value="new_year">New Year</option>
+                    </select>
+                </td>
+            </tr>
+        </table>
+        <button type="submit">Predict</button>
+    </form>
+
+    <div id="result"></div>
+
+    <script>
+        document.getElementById("data-form").addEventListener("submit", async function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(e.target);
+            const data = {};
+            formData.forEach((value, key) => data[key] = value);
+
+            try {
+                const response = await fetch("http://localhost:5000/predict", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || "Server Error");
+                }
+
+                const result = await response.json();
+                document.getElementById("result").innerHTML = 
+                    `Top Product Prediction:<br> 
+                    Product: ${result.product}<br> 
+                    Predicted Sales: ${result.sales}`;
+            } catch (error) {
+                document.getElementById("result").innerHTML = `<span class="error">Error: ${error.message}</span>`;
+            }
+        });
+    </script>
+</body>
+</html>

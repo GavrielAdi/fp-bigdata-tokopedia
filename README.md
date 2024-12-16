@@ -13,18 +13,45 @@ Implementasi Data Lakehouse pada Tokopedia
 ## Dataset
 https://www.kaggle.com/datasets/farhan999/tokopedia-product-reviews/data
 
+## Arsitektur
+![arsi](img/image.png)
 
 ## Cara menjalankan
-1. Nyalakan docker
-```sh
-cd docker
+### Tahap Awal
+run docker
+```bash
 docker-compose up -d
 ```
 
-2. Config Kafka
-```sh
-docker exec -it kafka bash
-kafka-topics.sh --create --topic product_reviews --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
+kafka
+```bash
+docker exec -it kafka kafka-topics.sh --create --topic product-review --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
+docker exec -it kafka kafka-topics.sh --create --topic product-input --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
 ```
 
-exec $(dirname $0)/kafka-run-class.sh kafka.admin.TopicCommand "$@"
+### Login Minio
+```txt
+minio/minio123
+```
+
+### Tahap 1 (preset)
+```bash
+cd preset
+python3 producer.py
+python3 consumer.py
+python3 train.py
+```
+atau bash start.sh dan liat pada minio untuk memastikan apakah sudah selesai
+
+### Tahap 2 (main)
+```bash
+cd main
+python3 api/app.py 
+python3 kafka/consumer.py
+```
+
+web
+```bash
+cd main/web
+python3 -m http.server 8080
+```
