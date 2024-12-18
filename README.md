@@ -17,40 +17,35 @@ https://www.kaggle.com/datasets/farhan999/tokopedia-product-reviews/data
 ![arsi](img/arsitektur.png)
 
 ## Cara menjalankan
-### Tahap Awal
-run docker
+1. Run Docker
 ```bash
 docker-compose up -d
 ```
 
-kafka
+2. Run Kafka
 ```bash
 docker exec -it kafka kafka-topics.sh --create --topic product-review --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
 docker exec -it kafka kafka-topics.sh --create --topic product-input --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
 ```
 
-### Login Minio
+3. Login Minio
 ```txt
 minio/minio123
 ```
 
-### Tahap 1 (preset)
+4. Run start.sh
 ```bash
-cd preset
-python3 producer.py
-python3 consumer.py
-python3 train.py
+bash start.sh
 ```
-atau bash start.sh dan liat pada minio untuk memastikan apakah sudah selesai
 
-### Tahap 2 (main)
+5. Run main
 ```bash
 cd main
 python3 api/app.py 
 python3 kafka/consumer.py
 ```
 
-web
+6. Run web
 ```bash
 cd main/web
 python3 -m http.server 8080
