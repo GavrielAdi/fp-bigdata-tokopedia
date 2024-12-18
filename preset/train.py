@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense
+from tensorflow.keras.layers import LSTM, Dense, Input
 from minio import Minio
 from io import BytesIO
 import joblib
@@ -25,23 +25,56 @@ def load_dataset(filepath):
     if not os.path.exists(filepath):
         raise FileNotFoundError(f"Dataset file '{filepath}' not found.")
     df = pd.read_csv(filepath)
-    if 'Close' not in df.columns:
-        raise ValueError("Dataset does not contain the 'Close' column.")
-    return df['Close'].values.reshape(-1, 1)
+
+    # Validate required columns
+    required_columns = ['rating', 'sold']
+    for column in required_columns:
+        if column not in df.columns:
+            raise ValueError(f"Dataset does not contain the required column '{column}'.")
+
+    # Clean and convert data
+    for column in required_columns:
+        # Replace non-numeric values with NaN
+        df[column] = (
+            df[column]
+            .astype(str)
+            .str.replace(',', '.')
+            .str.replace('rb', 'e3', regex=False)
+            .apply(pd.to_numeric, errors='coerce')  # Convert to numeric, setting invalids as NaN
+        )
+
+    # Drop rows with NaN values
+    df = df.dropna(subset=required_columns)
+
+    return df[['rating', 'sold']].values  # Return both features
+
+# Function: Preprocess data
+def preprocess_data(data, scaler=None):
+    """
+    Preprocess data using MinMaxScaler.
+    If a scaler is provided, use it for transformation.
+    Otherwise, fit a new scaler.
+    """
+    if scaler:
+        return scaler.transform(data), scaler
+    else:
+        new_scaler = MinMaxScaler()
+        return new_scaler.fit_transform(data), new_scaler
 
 # Function: Prepare LSTM training data
 def prepare_data(data, sequence_length=5):
     X, y = [], []
     for i in range(len(data) - sequence_length):
-        X.append(data[i:i + sequence_length])
-        y.append(data[i + sequence_length])
+        X.append(data[i:i + sequence_length])  # Take sequence of features
+        y.append(data[i + sequence_length, 0])  # Predict based on the first feature (rating)
     return np.array(X), np.array(y)
 
 # Function: Define LSTM model
 def build_model(input_shape):
     model = Sequential([
-        LSTM(50, activation='relu', input_shape=input_shape),
-        Dense(1)
+        Input(shape=input_shape),
+        LSTM(50, activation='relu'),
+        Dense(1)  # Output a single prediction
     ])
     model.compile(optimizer='adam', loss='mse')
     return model
@@ -62,20 +95,23 @@ if __name__ == "__main__":
             MINIO_CLIENT.make_bucket(BUCKET_NAME)
             print(f"Bucket '{BUCKET_NAME}' created in MinIO.")
 
-        # Load and normalize dataset
+        # Load dataset
         print("Loading dataset...")
         data = load_dataset(DATASET_PATH)
-        scaler = MinMaxScaler()
-        data_scaled = scaler.fit_transform(data)
+
+        # Preprocess data
+        print("Preprocessing data...")
+        data_scaled, scaler = preprocess_data(data)
 
         # Prepare LSTM training data
         print("Preparing training data...")
         sequence_length = 5
         X, y = prepare_data(data_scaled, sequence_length)
+        print(f"Shape of X: {X.shape}, Shape of y: {y.shape}")  # Debugging shape
 
         # Build and train the model
         print("Building the LSTM model...")
-        model = build_model(input_shape=(sequence_length, 1))
+        model = build_model(input_shape=(sequence_length, 2))  # 2 features: 'rating' and 'sold'
         print("Training the model...")
         model.fit(X, y, epochs=20, batch_size=16, verbose=2)
         print("Model training complete!")

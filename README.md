@@ -14,7 +14,7 @@ Implementasi Data Lakehouse pada Tokopedia
 https://www.kaggle.com/datasets/farhan999/tokopedia-product-reviews/data
 
 ## Arsitektur
-![arsi](img/image.png)
+![arsi](img/arsitektur.png)
 
 ## Cara menjalankan
 ### Tahap Awal

@@ -40,22 +40,28 @@ def consume_messages():
 
             # Decode and process the message
             try:
+                # Load message as JSON
                 data = json.loads(msg.value().decode('utf-8'))
-                dates = data['dates']
-                closes = data['closes']
+                
+                # Periksa apakah 'features' ada dalam data
+                if 'features' not in data:
+                    print(f"Invalid message format: {data}")
+                    continue
 
-                for date, close in zip(dates, closes):
-                    file_data = {"date": date, "close": close}
-                    filename = f"p{date}.json"
+                features = data['features']
 
-                    # Save to temporary file
-                    with open(filename, 'w') as f:
-                        json.dump(file_data, f)
+                # Buat file JSON dari data features
+                file_data = {"features": features}
+                filename = f"features-{datetime.now().strftime('%Y%m%d%H%M%S')}.json"
 
-                    # Upload to MinIO
-                    minio_client.fput_object(BUCKET_NAME, filename, filename)
-                    os.remove(filename)
-                    print(f"Saved data to MinIO: {filename}")
+                # Simpan ke file sementara
+                with open(filename, 'w') as f:
+                    json.dump(file_data, f)
+
+                # Upload ke MinIO
+                minio_client.fput_object(BUCKET_NAME, filename, filename)
+                os.remove(filename)
+                print(f"Saved data to MinIO: {filename}")
 
             except Exception as e:
                 print(f"Error processing message: {e}")
